@@ -47,7 +47,8 @@ shinyUI(fluidPage(
             
             textAreaInput("film_annotation", "Add. text on plot:"),
             textInput("test_conductor", "The test was conducted by:"),
-            checkboxInput("curve_smooth", "Smooth curves (dot off)"),
+            checkboxInput("curve_smooth", "Smooth curves (dot off)", value = TRUE),
+            checkboxInput("fgei","Show fractional gradient E.I. (test)",value = FALSE),
             tags$hr(),
             
             fileInput("film_data", "Testing data (*.xlsx):", 
