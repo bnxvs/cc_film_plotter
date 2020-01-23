@@ -145,6 +145,8 @@ shinyServer(function(input, output) {
         ggplot() + 
           {if(input$curve_smooth == T) geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), data=melted, 
                                                    aes(x = D, y = value, group = variable, color=variable), se = F)}+
+          {if(input$curve_smooth == F) geom_point(data = melted, aes(x = D, y = value, group = variable, 
+                                                                    color = variable), se = F)}+
           {if(input$curve_smooth == F) geom_line(data = melted, aes(x = D, y = value, group = variable, 
                                                                     color = variable), se = F)}+
 #              geom_point(data = melted, aes(x = D, y = value, group = variable, color = variable), 
@@ -188,10 +190,12 @@ shinyServer(function(input, output) {
     df <- data()
     CIs <- c()
     ISOs <- c()
+    ISOfg <- c()
     ISO09s <- c()
     Ran <- c()
     Dmi <- c()
     Dmx <- c()
+    dD <- c()
     Dlb <- c()
     Gamma <- c()
     heads <- c(names(df))
@@ -268,19 +272,37 @@ shinyServer(function(input, output) {
       
       del_b <- round(3.3 / gam, digits = 1)
       
+      deltaD <- round(g_point - as.numeric(iso_point[1]), digits = 2)
+      dD <- c(dD, deltaD)
+      
+      # чуйка по методике FG
+      delta_x <-  round(0.83 - ((0.86*deltaD) + (0.24*(deltaD^2))), digits = 2)
+      iso_point_fg <- approx(x = axisx, 
+                             y = axisy, 
+                             xout = axisx[1] + 0.1 - delta_x)
+      x_fg = as.numeric(iso_point_fg[2]) #пишем определенные координаты Х в переменную
+      
+      iso_fg <- round(1/10^x_fg, digits = 2) #рассчитываем E.I. Fractional Gradient
+      
+      
       Dmi <- c(Dmi, dmin)
       Dmx <- c(Dmx, dmax)
       Ran <- c(Ran, range_lenght)
       CIs <- c(CIs, g)
       ISOs <- c(ISOs, iso)
+      ISOfg <- c(ISOfg, iso_fg)
       ISO09s <- c(ISO09s, iso09)
       Dlb <- c(Dlb, del_b)
       Gamma <- c(Gamma, gam)
       
     }
-    test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,
+    if(input$fgei == T) {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,"E.I. FG (ΔX)" = ISOfg,
                               "CI (g)" = CIs, "γ" = Gamma, "Range 'L' (ΔD1.2)" = Ran, "∆B" = Dlb,
-                              "D min." = Dmi, "D max." = Dmx, check.names=FALSE)
+                              "D min." = Dmi, "D max." = Dmx, "ΔD (1.3 LogH)" = dD, check.names=FALSE)}
+    else {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,
+                                    "CI (g)" = CIs, "γ" = Gamma, "Range 'L' (ΔD1.2)" = Ran, "∆B" = Dlb,
+                                    "D min." = Dmi, "D max." = Dmx, check.names=FALSE)}
   })
 
 })
+
