@@ -35,12 +35,14 @@ shinyServer(function(input, output) {
   })
     
   output$distPlot <- renderPlot({
+      #резервируем переменные
       req(data())
       df <- data()
       CIs <- c()
       ISOs <- c()
       iso_x_point <- c()
       iso_y_point <- c()
+      #заполняем столбец с координатами по оси Х (экспозиции) в зависимости от предполагаемой чувствительности
       if (input$ei_d == "100") {
         df$D <- c(-2.60206,-2.45154,-2.30103,-2.15051,
                   -2.00000,-1.84949,-1.69897,-1.54846,
@@ -69,6 +71,7 @@ shinyServer(function(input, output) {
       axisy <- df$D
       
 # ********************************************************************
+      #определяем координаты точки с плотностью 0.1 над вуалью
       iso_point <- approx(x = axisx, 
                           y = axisy, 
                           xout = axisx[1] + 0.1)
@@ -102,18 +105,18 @@ shinyServer(function(input, output) {
       } else if (input$agitation == 4) {
         regim <- c("without agitation (stand dev.)")
       }
-# ********************************************************************
+# ******************************************************************** строим график
       if(input$`x-scale` == "LuxS") {
       ggplot() + 
         {if(input$curve_smooth == T) geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), data=melted, 
-                    aes(x = D, y = value, group = variable, color=variable), se = F)}+
+                    aes(x = D, y = value, group = variable, color=variable), se = F)}+ #сглаженная кривая
         {if(input$curve_smooth == F) geom_line(data = melted, aes(x = D, y = value, group = variable, 
-                   color = variable), se = F)}+
+                   color = variable), se = F)}+ #кривая без сглаживания
 #        geom_point(data = melted, aes(x = D, y = value, group = variable, color = variable), 
-#                     se = F)+
+#                     se = F)+ #отображение точек на кривой
         coord_fixed()+
-#        geom_hline(yintercept = as.numeric(iso_x_point), color = "lightgrey", linetype = "dashed")+
-#        geom_vline(xintercept = as.numeric(iso_y_point), color = "lightgrey", linetype = "dashed")+
+#        geom_hline(yintercept = as.numeric(iso_x_point), color = "lightgrey", linetype = "dashed")+ #гор. линия в точке 0.1D над вуалью
+#        geom_vline(xintercept = as.numeric(iso_y_point), color = "lightgrey", linetype = "dashed")+ #верт. линия в точке 0.1D над вуалью
         theme_linedraw()+
         ggtitle(paste("Family plot: ", input$film_name, " ", input$film_type, " in ", input$dev_name, " ", input$dev_dil,
                       "\n", regim, ", ", input$temperature,"°C", 
@@ -296,6 +299,8 @@ shinyServer(function(input, output) {
       Gamma <- c(Gamma, gam)
       
     }
+    
+    #вывод таблицы рассчитанных параметров
     if(input$fgei == T) {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,"E.I. FG (ΔX)" = ISOfg,
                               "CI (g)" = CIs, "γ" = Gamma, "Range 'L' (ΔD1.2)" = Ran, "∆B" = Dlb,
                               "D min." = Dmi, "D max." = Dmx, "ΔD (1.3 LogH)" = dD, check.names=FALSE)}
