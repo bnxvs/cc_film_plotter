@@ -1,24 +1,5 @@
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(shiny)
-library("ggplot2")
-library("ggthemes")
-library("openxlsx")
-library("readxl")
-library("readr")
-library('reshape2')
-
-#source("Plotting_film.R")
-
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
-
   data <- reactive({
     film <- input$film_data
     
@@ -35,14 +16,12 @@ shinyServer(function(input, output) {
   })
     
   output$distPlot <- renderPlot({
-      #резервируем переменные
       req(data())
       df <- data()
       CIs <- c()
       ISOs <- c()
       iso_x_point <- c()
       iso_y_point <- c()
-      #заполняем столбец с координатами по оси Х (экспозиции) в зависимости от предполагаемой чувствительности
       if (input$ei_d == "100") {
         df$D <- c(-2.60206,-2.45154,-2.30103,-2.15051,
                   -2.00000,-1.84949,-1.69897,-1.54846,
@@ -56,11 +35,10 @@ shinyServer(function(input, output) {
                   -1.09691, -0.94640, -0.79588, -0.64537, 
                   -0.49485, -0.34434, -0.19382, -0.04331, 0.10721)
       } else if (input$ei_d == "400") {
-        df$D <- c(-3.50515, -3.35463, -3.20412, -3.05360, 
-                  -2.90309, -2.75257, -2.60206, -2.45154, 
-                  -2.30103, -2.15051, -2.00000, -1.84949, 
-                  -1.69897, -1.54846, -1.39794, -1.24743, 
-                  -1.09691, -0.94640, -0.79588, -0.64537, -0.49485)
+        df$D <- c(-3.20412,-3.02803,-2.90309,-2.72700,-2.60206,
+                  -2.42597,-2.30103,-2.12494,-2.00000,-1.82391,
+                  -1.69897,-1.52288,-1.39794,-1.22185,-1.09691,
+                  -0.92082,-0.79588,-0.61979,-0.49485,-0.31876,-0.19382)
       }
       
       melted = melt(df, id.vars="D")
@@ -71,7 +49,6 @@ shinyServer(function(input, output) {
       axisy <- df$D
       
 # ********************************************************************
-      #определяем координаты точки с плотностью 0.1 над вуалью
       iso_point <- approx(x = axisx, 
                           y = axisy, 
                           xout = axisx[1] + 0.1)
@@ -85,7 +62,7 @@ shinyServer(function(input, output) {
       #определяем координаты точки +1,3Х по оси Y для расчета дельты D
       gamma_point <- approx(x = axisy,
                             y = axisx,
-                            xout = x + 1.3)
+                            xout = as.numeric(iso_point[2]) + 1.3)
       gamma_point_x <- as.numeric(axisx[1] + 0.1) #пишем определенные координаты Y в переменную
       
       g_point <- as.numeric(gamma_point[2]) #приводим к цифровому формату
@@ -105,18 +82,18 @@ shinyServer(function(input, output) {
       } else if (input$agitation == 4) {
         regim <- c("without agitation (stand dev.)")
       }
-# ******************************************************************** строим график
+# ********************************************************************
       if(input$`x-scale` == "LuxS") {
       ggplot() + 
         {if(input$curve_smooth == T) geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), data=melted, 
-                    aes(x = D, y = value, group = variable, color=variable), se = F)}+ #сглаженная кривая
+                    aes(x = D, y = value, group = variable, color=variable), se = F)}+
         {if(input$curve_smooth == F) geom_line(data = melted, aes(x = D, y = value, group = variable, 
-                   color = variable), se = F)}+ #кривая без сглаживания
+                   color = variable), se = F)}+
 #        geom_point(data = melted, aes(x = D, y = value, group = variable, color = variable), 
-#                     se = F)+ #отображение точек на кривой
+#                     se = F)+
         coord_fixed()+
-#        geom_hline(yintercept = as.numeric(iso_x_point), color = "lightgrey", linetype = "dashed")+ #гор. линия в точке 0.1D над вуалью
-#        geom_vline(xintercept = as.numeric(iso_y_point), color = "lightgrey", linetype = "dashed")+ #верт. линия в точке 0.1D над вуалью
+        geom_hline(yintercept = as.numeric(iso_x_point), color = "lightgrey", linetype = "dashed")+
+        geom_vline(xintercept = as.numeric(iso_y_point), color = "lightgrey", linetype = "dashed")+
         theme_linedraw()+
         ggtitle(paste("Family plot: ", input$film_name, " ", input$film_type, " in ", input$dev_name, " ", input$dev_dil,
                       "\n", regim, ", ", input$temperature,"°C", 
@@ -134,11 +111,11 @@ shinyServer(function(input, output) {
               legend.text=element_text(size=14))+
         geom_text(aes(-3, 2.4, label=paste(input$film_annotation, "\n", input$test_conductor, " ", input$test_date),
                       hjust = "inward", family="Helvetica", fontface="italic"),
-                      colour = "gray60")+    
-        scale_x_continuous(breaks = c(-3.2,-2.9,-2.6,-2.3,-2.0,-1.7,-1.4,
+                      colour = "black")+    
+        scale_x_continuous(breaks = c(-3.5,-3.2,-2.9,-2.6,-2.3,-2.0,-1.7,-1.4,
                                       -1.1,-0.8,-0.49,-0.19,0.11,0.41),
-                           limits = c(-3.3,0.408), 
-                           labels = c(0.00063,0.00125,0.0025,0.005,0.01,
+                           limits = c(-3.5,0.7), 
+                           labels = c(0.000315,0.00063,0.00125,0.0025,0.005,0.01,
                                       0.02,0.04,0.08,0.16,0.32,0.63,1.25,2.5),
                            expand = c(0, 0))+
         scale_y_continuous(breaks = seq(0,3.0,0.2),
@@ -174,10 +151,10 @@ shinyServer(function(input, output) {
                 legend.text=element_text(size=14))+
           geom_text(aes(-3, 2.4, label=paste(input$film_annotation, "\n", input$test_conductor, " ", input$test_date),
                         hjust = "inward", family="Helvetica", fontface="italic"),
-                    colour = "gray60")+    
-          scale_x_continuous(breaks = c(-3.2,-2.9,-2.6,-2.3,-2.0,-1.7,-1.4,
+                    colour = "black")+    
+          scale_x_continuous(breaks = c(-3.5,-3.2,-2.9,-2.6,-2.3,-2.0,-1.7,-1.4,
                                         -1.1,-0.8,-0.49,-0.19,0.11,0.41),
-                             limits = c(-3.3,0.408), 
+                             limits = c(-3.5,0.7), 
 #                             labels = c(0.00063,0.00125,0.0025,0.005,0.01,
 #                                        0.02,0.04,0.08,0.16,0.32,0.63,1.25,2.5),
                              expand = c(0, 0))+
@@ -186,7 +163,6 @@ shinyServer(function(input, output) {
                              expand = c(0, 0))
       }
          })
-  
 # **********************************************************************  
   output$TestResult <- renderTable({
     req(data())
@@ -216,11 +192,10 @@ shinyServer(function(input, output) {
                 -1.09691, -0.94640, -0.79588, -0.64537, 
                 -0.49485, -0.34434, -0.19382, -0.04331, 0.10721)
     } else if (input$ei_d == "400") {
-      df$D <- c(-3.50515, -3.35463, -3.20412, -3.05360, 
-                -2.90309, -2.75257, -2.60206, -2.45154, 
-                -2.30103, -2.15051, -2.00000, -1.84949, 
-                -1.69897, -1.54846, -1.39794, -1.24743, 
-                -1.09691, -0.94640, -0.79588, -0.64537, -0.49485)
+      df$D <- c(-3.20412,-3.02803,-2.90309,-2.72700,-2.60206,
+                -2.42597,-2.30103,-2.12494,-2.00000,-1.82391,
+                -1.69897,-1.52288,-1.39794,-1.22185,-1.09691,
+                -0.92082,-0.79588,-0.61979,-0.49485,-0.31876,-0.19382)
     }
     
     ln <- length(names(df))
@@ -240,7 +215,7 @@ shinyServer(function(input, output) {
       # по критерию 0.9
       iso_point_09 <- approx(x = axisx, 
                              y = axisy, 
-                             xout = axisx[1] + 0.9)
+                             xout = axisx[1] + 0.6)
       x09 = as.numeric(iso_point_09[2])
 #      temp_iso <- 10^x09 #Контрольная проверка ИСО
 
@@ -249,7 +224,7 @@ shinyServer(function(input, output) {
       #определяем координаты точки +1,3Х по оси Y для расчета дельты D
       gamma_point <- approx(x = axisy,
                             y = axisx,
-                            xout = x + 1.3)
+                            xout = as.numeric(iso_point[2]) + 1.3)
       gamma_point_x <- as.numeric(axisx[1] + 0.1) #пишем определенные координаты Y в переменную
       
       g_point <- as.numeric(gamma_point[2]) #приводим к цифровому формату
@@ -282,7 +257,7 @@ shinyServer(function(input, output) {
       delta_x <-  round(0.83 - ((0.86*deltaD) + (0.24*(deltaD^2))), digits = 2)
       iso_point_fg <- approx(x = axisx, 
                              y = axisy, 
-                             xout = axisx[1] + 0.1 - delta_x)
+                             xout = axisx[1] + 0.1 - (abs(delta_x)*-1))
       x_fg = as.numeric(iso_point_fg[2]) #пишем определенные координаты Х в переменную
       
       iso_fg <- round(1/10^x_fg, digits = 2) #рассчитываем E.I. Fractional Gradient
@@ -299,15 +274,12 @@ shinyServer(function(input, output) {
       Gamma <- c(Gamma, gam)
       
     }
-    
-    #вывод таблицы рассчитанных параметров
-    if(input$fgei == T) {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,"E.I. FG (ΔX)" = ISOfg,
+    if(input$fgei == T) {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.6" = ISO09s,"E.I. by ΔX (FG)" = ISOfg,
                               "CI (g)" = CIs, "γ" = Gamma, "Range 'L' (ΔD1.2)" = Ran, "∆B" = Dlb,
                               "D min." = Dmi, "D max." = Dmx, "ΔD (1.3 LogH)" = dD, check.names=FALSE)}
-    else {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.9" = ISO09s,
+    else {test_result <- data.frame("Time & note" = heads, "E.I.('iso') b/f + 0.1" = ISOs, "E.I. b/f + 0.6" = ISO09s,
                                     "CI (g)" = CIs, "γ" = Gamma, "Range 'L' (ΔD1.2)" = Ran, "∆B" = Dlb,
                                     "D min." = Dmi, "D max." = Dmx, check.names=FALSE)}
   })
 
 })
-
