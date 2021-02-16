@@ -1,0 +1,25 @@
+---
+title: "Film report"
+params:
+  draw_plot: NULL
+  test_result: NULL
+output: html_document
+---
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r fig.height = 11, fig.width = 20, dpi = 180, out.extra='style="background-color: #c6c6c6; padding:3px; display: inline-block;"'}
+if (!is.null(params$draw_plot))
+  params$draw_plot()
+```
+
+
+```{r}
+library('knitr')
+library('kableExtra')
+if (!is.null(params$test_result))
+  kbl(params$test_result(), caption = 'Additional data', booktabs = T)%>%
+  kable_styling(latex_options = "striped")
+```
