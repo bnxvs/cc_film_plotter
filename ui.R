@@ -51,7 +51,8 @@ shinyUI(fluidPage(
             
             fileInput("film_data", "Testing data (*.xlsx):", 
                       accept = c(".xlsx")),
-            width = 3
+            width = 3,
+            downloadButton("download_button")
         ),
 
         # Show a plot of the generated distribution
