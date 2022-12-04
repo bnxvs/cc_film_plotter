@@ -16,9 +16,12 @@ library("readr")
 library('reshape2')
 library('sendmailR')
 library("rmarkdown")
+library("bslib")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  
+  theme = bs_theme(version = 5, bootswatch = 'minty'),
   
   # Application title
   titlePanel("Film curves plotting"),
