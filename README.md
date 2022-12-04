@@ -5,3 +5,5 @@ Working version - https://bnxvs.shinyapps.io/cc_film_plot/
 02/16/2021 - Added report download function (html format)
 
 09/02/2022 - Rewrite code with actual shiny applications structure (all code in single file)
+
+12/04/2022 - Added the bootstrap theme "minty" (bslib)
