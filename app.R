@@ -106,6 +106,16 @@ server <- function(input, output) {
   
   
   # **********************************************************************  
+
+  round_math <- function(x, digits = 0) {
+    posneg <- sign(x)  # Определяем знак числа
+    z <- abs(x) * 10^digits
+    z <- z + 0.5  # Добавляем 0.5 для округления вверх
+    z <- floor(z)
+    return(posneg * z / 10^digits)
+  }
+
+  
   
   test_res <- function() {
     req(data())
@@ -142,7 +152,7 @@ server <- function(input, output) {
                           xout = axisx[1] + 0.1)
       x = as.numeric(iso_point[2]) #пишем определенные координаты Х в переменную
       
-      iso <- round(0.8/10^x, digits = 0) #рассчитываем ISO
+      iso <- round_math(0.8/10^x, digits = 0) #рассчитываем ISO
       
       # по критерию 0.9
       iso_point_09 <- approx(x = axisx, 
@@ -151,7 +161,7 @@ server <- function(input, output) {
       x09 = as.numeric(iso_point_09[2])
       #      temp_iso <- 10^x09 #Контрольная проверка ИСО
       
-      iso09 <- round(10/10^x09, digits = 0)
+      iso09 <- round_math(10/10^x09, digits = 0)
       
       #определяем координаты точки +1,3Х по оси Y для расчета дельты D
       gamma_point <- approx(x = axisy,
@@ -161,38 +171,38 @@ server <- function(input, output) {
       
       g_point <- as.numeric(gamma_point[2]) #приводим к цифровому формату
       
-      g <- round((g_point - gamma_point_x) / 1.3, digits = 2) #определяем средний градиент
+      g <- round_math((g_point - gamma_point_x) / 1.3, digits = 2) #определяем средний градиент
       
       range_point <- approx(x = axisx,
                             y = axisy,
                             xout = as.numeric(iso_point[1]) + 1.2)
       r <- as.numeric(range_point[2])
       
-      range_lenght <- round(abs(x - r), digits = 2)
+      range_lenght <- round_math(abs(x - r), digits = 2)
       
-      dmin <- round(axisx[1], digits = 2)
-      dmax <- round(max(axisx), digits = 2)
+      dmin <- round_math(axisx[1], digits = 2)
+      dmax <- round_math(max(axisx), digits = 2)
       
       gam_start_point <- approx(x = axisy, 
                                 y = axisx, 
                                 xout = x + 0.1)
       gam_x <- as.numeric(gam_start_point[1]) #пишем определенные координаты Х в переменную
-      gam <- round((g_point - gamma_point_x) / 
+      gam <- round_math((g_point - gamma_point_x) / 
                      (as.numeric(gamma_point[1]) - gam_x), digits = 2)
       
-      del_b <- round(3.3 / gam, digits = 1)
+      del_b <- round_math(3.3 / gam, digits = 1)
       
-      deltaD <- round(g_point - as.numeric(iso_point[1]), digits = 2)
+      deltaD <- round_math(g_point - as.numeric(iso_point[1]), digits = 2)
       dD <- c(dD, deltaD)
       
       # чуйка по методике FG
-      delta_x <-  round(0.83 - ((0.86*deltaD) + (0.24*(deltaD^2))), digits = 2)
+      delta_x <-  round_math(0.83 - ((0.86*deltaD) + (0.24*(deltaD^2))), digits = 2)
       iso_point_fg <- approx(x = axisx, 
                              y = axisy, 
                              xout = axisx[1] + 0.1 - (abs(delta_x)*-1))
       x_fg = as.numeric(iso_point_fg[2]) #пишем определенные координаты Х в переменную
       
-      iso_fg <- round(1/10^x_fg, digits = 2) #рассчитываем E.I. Fractional Gradient
+      iso_fg <- round_math(1/10^x_fg, digits = 2) #рассчитываем E.I. Fractional Gradient
       
       
       Dmi <- c(Dmi, dmin)
@@ -253,7 +263,7 @@ server <- function(input, output) {
       iso_x_point <- c(iso_x_point, iso_point[1])
       iso_y_point <- c(iso_y_point, iso_point[2])
       
-      iso <- round(0.8/10^x, digits = 0) #рассчитываем ISO
+      iso <- round_math(0.8/10^x, digits = 0) #рассчитываем ISO
       
       #определяем координаты точки +1,3Х по оси Y для расчета дельты D
       gamma_point <- approx(x = axisy,
@@ -263,7 +273,7 @@ server <- function(input, output) {
       
       g_point <- as.numeric(gamma_point[2]) #приводим к цифровому формату
       
-      g <- round((g_point - gamma_point_x) / 1.3, digits = 2) #определяем средний градиент
+      g <- round_math((g_point - gamma_point_x) / 1.3, digits = 2) #определяем средний градиент
       
       CIs <- c(CIs, g)
       ISOs <- c(ISOs, iso)
